@@ -5,6 +5,8 @@ import java.util.List;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.vobi.bank.domain.Users;
 import com.vobi.bank.dto.UsersDTO;
 import com.vobi.bank.mapper.UsersMapper;
@@ -30,9 +33,29 @@ public class UsersController {
 	UsersMapper usersMapper;
 
 	// borrar
-	@DeleteMapping("/{email}")
+	/*@DeleteMapping("/{email}")
 	public void delete(@PathVariable("email") String email) throws Exception {
 		usersService.deleteById(email);
+	}*/
+	
+	@DeleteMapping("/{email}")
+	public ResponseEntity<String> delete(@PathVariable("email") String email) throws Exception {
+		//usersService.deleteById(email);
+		
+		Users users = null ;
+		String msg = null ;
+				
+		if (usersService.findById(email).isPresent() == true) {
+			users = usersService.findById(email).get();
+			usersService.deleteById(email);
+		} 
+		else {
+			 	msg = "User not found";
+			 	return ResponseEntity.status(HttpStatus.NOT_FOUND).body(msg);
+		}
+		
+		    	msg = "Borrado exitoso";
+		    	return ResponseEntity.status(HttpStatus.OK).body(msg);
 	}
 
 	// Modificar
@@ -57,18 +80,24 @@ public class UsersController {
 
 	// Consultar por email
 	@GetMapping("/{email}")
-	public UsersDTO findById(@PathVariable("email") String email) throws Exception {
+	public ResponseEntity<UsersDTO> findById(@PathVariable("email") String email) throws Exception {
 		// Customer
 		// customer=(customerService.findById(id).isPresent()==true)?customerService.findById(id).get():null;
 
 		Users users = null ;
 		UsersDTO usersDTO = null;
-		if (usersService.findById(email).isPresent() == true)
+		
+		if (usersService.findById(email).isPresent() == true) {
 			users = usersService.findById(email).get();
 
-		usersDTO = usersMapper.usersToUsersDTO(users);
+			usersDTO = usersMapper.usersToUsersDTO(users);
 
-		return usersDTO;
+			return ResponseEntity.status(HttpStatus.OK).body(usersDTO);
+			}
+		else{
+			return new ResponseEntity<>(usersDTO,HttpStatus.NOT_FOUND);
+		}
+				
 	}
 
 	// Consultar todos los customers
